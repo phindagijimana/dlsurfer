@@ -5,26 +5,26 @@ site_url: https://dlsurfer.readthedocs.io/
 repo_url: https://github.com/phindagijimana/dlsurfer
 repo_name: phindagijimana/dlsurfer
 edit_uri: edit/main/docs/
-# Docs IA inspired by DKT Connectome (https://dkt-connectome.readthedocs.io/)
-# and QSIPrep (install / prepare / usage / outputs).
+# Primary hosted docs are Sphinx + sphinx_rtd_theme (see docs/conf.py),
+# matching DKT Connectome (https://dkt-connectome.readthedocs.io/).
+# This MkDocs file remains an optional local Material mirror only.
 
 theme:
   name: material
   palette:
     - scheme: default
-      primary: indigo
-      accent: indigo
+      primary: blue-grey
+      accent: blue
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
     - scheme: slate
-      primary: indigo
-      accent: indigo
+      primary: blue-grey
+      accent: blue
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
   features:
-    - navigation.tabs
     - navigation.sections
     - navigation.expand
     - navigation.top
@@ -32,6 +32,7 @@ theme:
     - search.highlight
     - content.code.copy
     - toc.follow
+
 
 plugins:
   - search

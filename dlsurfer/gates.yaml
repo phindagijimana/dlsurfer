@@ -41,11 +41,12 @@ gates:
     title: TBI ± LIT DL-CTE thickness (no mesh)
     blocks_profiles:
       - thickness-fast
-    status: open
+    status: passed
     evidence: docs/lab/TBI_LIT_SURFACES_REPORT.md
     note: >
-      Literature-best Ready thickness-without-surfaces (DL-CTE / CortexMorph family).
-      Biomarker only — never for connectome/aparc. Set DL_CTE_ROOT when installed.
+      CortexMorph (SCAN-NRAD; Wu DL-CTE GitHub empty) ±LIT on EG — CSVs under
+      work/phase3_gates/cm_{with,no}_lit/sub-EG/mri/thickness_cortexmorph.csv
+      (job 191968). Biomarker only — never for connectome/aparc.
 
   synthseg_pc_vs_jlf:
     title: SynthSeg-PC vs JLF/MAPER (Hammers + IDEAS)

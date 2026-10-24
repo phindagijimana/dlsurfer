@@ -1,6 +1,6 @@
 # DLSurfer
 
-[![Docs](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://phindagijimana.github.io/dlsurfer/)
+[![Docs](https://readthedocs.org/projects/dlsurfer/badge/?version=latest)](https://dlsurfer.readthedocs.io/en/latest/)
 [![License](https://img.shields.io/badge/license-Apache%202.0-green)](LICENSE)
 [![Python](https://img.shields.io/badge/python-%3E%3D3.9-blue)](pyproject.toml)
 
@@ -9,9 +9,12 @@
 > Does **not** replace FreeSurfer / FastSurfer science.  
 > Orchestrates validated tools (FastSurfer VINN, neuroLIT, Synth*, TopoFit, …).
 
-**Documentation** ([DKT Connectome](https://dkt-connectome.readthedocs.io/)-style IA + QSIPrep depth): https://dlsurfer.readthedocs.io/ (mirror: [GitHub Pages](https://phindagijimana.github.io/dlsurfer/))
+**Documentation** uses the same **Sphinx + Read the Docs theme** stack as [DKT Connectome](https://dkt-connectome.readthedocs.io/): https://dlsurfer.readthedocs.io/
 
-Local: `pip install -e ".[docs]" && mkdocs serve`
+```bash
+pip install -r docs/requirements.txt
+cd docs && make html   # open _build/html/index.html
+```
 
 ---
 

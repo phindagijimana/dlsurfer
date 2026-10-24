@@ -23,6 +23,13 @@ _ISOLATION = (
 
 
 def main(argv: list[str] | None = None) -> int:
+    argv_list = list(sys.argv[1:] if argv is None else argv)
+    # BIDS App–style stub uses its own argparse (positional bids_dir output_dir level).
+    if argv_list and argv_list[0] == "bids-app":
+        from dlsurfer.bids_app import run_bids_app
+
+        return run_bids_app(argv_list[1:])
+
     parser = argparse.ArgumentParser(
         prog="dlsurfer",
         description=(
@@ -34,6 +41,10 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("--version", action="version", version=f"dlsurfer {__version__}")
     sub = parser.add_subparsers(dest="cmd", required=True)
+    sub.add_parser(
+        "bids-app",
+        help="BIDS App–style stub (short of full standard): bids_dir output_dir {participant|group}",
+    )
 
     p_doc = sub.add_parser("doctor", help="Check environment, pins, isolation, claim boundary")
     p_doc.add_argument("--profile", help="Also report gates blocking this profile")
@@ -142,7 +153,11 @@ def main(argv: list[str] | None = None) -> int:
     p_handoff_dkt.add_argument("--sd", type=Path, required=True)
     p_handoff_dkt.add_argument("--sid", required=True)
 
-    args = parser.parse_args(argv)
+    args = parser.parse_args(argv_list)
+    if args.cmd == "bids-app":
+        from dlsurfer.bids_app import run_bids_app
+
+        return run_bids_app([])  # -h path via empty → usage; prefer `dlsurfer bids-app -h`
 
     if args.cmd == "doctor":
         from dlsurfer.doctor import doctor_summary_ok

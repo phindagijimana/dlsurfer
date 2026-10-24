@@ -64,6 +64,10 @@ nav:
       - Devices and HPC: usage/hpc.md
       - Preview the plan: usage/preview.md
       - Gates: usage/gates.md
+  - Methods & citations:
+      - Overview: methods/index.md
+      - Engines (resources + papers): methods/engines.md
+  - BIDS App status: bids_app.md
   - Command-line reference: cli.md
   - Outputs:
       - Layout: outputs/layout.md

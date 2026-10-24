@@ -18,6 +18,11 @@
 | Threads | `--threads` | FastSurfer / recon-surf |
 | Atlas | `--atlas dkt\|dk\|…` | Default DKT labeling |
 
-## Not BIDS-app (yet)
+## BIDS (stub only)
 
-Unlike QSIPrep, DLSurfer currently takes **explicit paths** (`--t1`, `--sd`, `--sid`), not a BIDS root. Keep layouts simple and reproducible.
+Preferred production API remains **explicit paths** (`--t1`, `--sd`, `--sid`).  
+A BIDS App–style stub exists but is **short of** the standard — see [BIDS App status](../bids_app.md):
+
+```bash
+dlsurfer bids-app BIDS_DIR OUT_DIR participant --participant_label 01 --profile core
+```

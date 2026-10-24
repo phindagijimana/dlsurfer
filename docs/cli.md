@@ -18,6 +18,7 @@ dlsurfer <command> [options]
 | `gaps-remaining` | Gaps without DL alts |
 | `cite` | Citation boilerplate for a profile |
 | `handoff` | Print-only consumer notes |
+| `bids-app` | BIDS App–style stub (`bids_dir output_dir level`) — [status](bids_app.md) |
 
 ## `run` — important flags
 

@@ -6,4 +6,6 @@
 - Profiles: `core`, `core-lesion`, seg-quick, specialty, Phase-3 TopoFit  
 - Apptainer cluster wrappers + `dlsurfer doctor` READY path  
 - Production gates (`tbi_lit_topofit` passed machine check on EG)  
-- MkDocs documentation site (QSIPrep-inspired structure)
+- MkDocs documentation site (QSIPrep-inspired structure)  
+- Methods page: per-engine resources + paper citations (from `engines.yaml`)  
+- `dlsurfer bids-app` stub — **short of** full BIDS App standard (roadmap documented)

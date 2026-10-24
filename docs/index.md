@@ -23,7 +23,11 @@ Optional profiles cover SynthSR preprocess, Mauri claustrum, HippUnfold, HA/BS/t
 
 ## Note
 
-DLSurfer **does not replace** FreeSurfer or FastSurfer. Similarities to other BIDS-app style docs (e.g. QSIPrep) are structural only — this project is T1 morphometry orchestration, not dMRI preprocessing.
+DLSurfer **does not replace** FreeSurfer or FastSurfer. Docs layout is inspired by QSIPrep; this project is T1 morphometry orchestration, not dMRI preprocessing.
+
+**BIDS App:** we are **short of** a full BIDS App — see [BIDS App status](bids_app.md). Use `dlsurfer run` today; `dlsurfer bids-app` is a stub toward the standard interface.
+
+**Citations:** every method’s CLI/resource and papers — [Methods](methods/index.md).
 
 ## Quick start
 

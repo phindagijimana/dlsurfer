@@ -1,54 +1,39 @@
-# DLSurfer: curated deep-learning morphometry
+# DLSurfer — curated deep-learning morphometry orchestrator
 
-**DLSurfer** configures and runs validated FreeSurfer / FastSurfer deep-learning tools to produce **FreeSurfer-shaped `SUBJECTS_DIR` outputs** (surfaces, labels, stats) suitable for downstream analysis (including QSIRecon-style consumers).
+DLSurfer turns a **T1w** (± lesion mask) into a **FreeSurfer-shaped `SUBJECTS_DIR`** using validated FastSurfer / FreeSurfer DL tools. With a lesion mask and profile `core-lesion`, the same plan can **inpaint T1w** (neuroLIT) then run ordinary FastSurfer so surfaces and labels are estimated on a filled anatomy. It is study-agnostic: lesion steps stay off unless you choose a lesion profile and pass a mask.
 
-Full documentation: use the tabs above. Source: [github.com/phindagijimana/dlsurfer](https://github.com/phindagijimana/dlsurfer).
+Sibling connectomics pipeline: **[DKT Connectome](https://dkt-connectome.readthedocs.io/)** (BIDS DWI → DKT connectome). DLSurfer is **isolated** morphometry orchestration — it does not import or modify the DKT workflow; handoff is optional print-only notes.
 
-## About
+Linux + Apptainer (FreeSurfer license required). Release: **v0.1.0**.
 
-DLSurfer is an **orchestrator**, not a new morphometry method. Main features:
+**Next:** [What DLSurfer does](getting_started/what.md) · [Installation](installation/index.md) · [Tutorial](getting_started/tutorial.md) · [Outputs](outputs/layout.md)
 
-1. **Profile-driven plans** — choose `core`, `core-lesion`, `seg-quick`, specialty modules, etc.; preview the exact commands before running.
-2. **Lesion-aware default** — standalone neuroLIT fill → ordinary FastSurfer → optional LIT postprocessing, preserving GPU seg / CPU surf HPC split.
-3. **Cited engines** — every step points at the upstream tool (VINN, CerebNet, HypVINN, SynthStrip, TopoFit, …); cite engines, not DLSurfer as anatomy science.
-4. **Gates** — experimental surface backends stay blocked until TBI±LIT validation evidence exists.
+This package orchestrates FastSurfer, FreeSurfer, and neuroLIT (and optional specialty tools). **Cite those papers** — [Methods / engines](methods/engines.md).
 
-### Morphometry (default)
-
-The default path wraps **FastSurfer 2.6** (VINN + modules + recon-surf) via Apptainer, optionally with **neuroLIT** lesion inpainting. Outputs are a standard FreeSurfer subject tree.
-
-### Specialty / experimental
-
-Optional profiles cover SynthSR preprocess, Mauri claustrum, HippUnfold, HA/BS/thalamic subfields, atlases (DK / Destrieux / Schaefer), and Phase-3 surface DL (TopoFit gated; V2C/SUGAR still open).
-
-## Note
-
-DLSurfer **does not replace** FreeSurfer or FastSurfer. Docs layout is inspired by QSIPrep; this project is T1 morphometry orchestration, not dMRI preprocessing.
-
-**BIDS App:** we are **short of** a full BIDS App — see [BIDS App status](bids_app.md). Use `dlsurfer run` today; `dlsurfer bids-app` is a stub toward the standard interface.
-
-**Citations:** every method’s CLI/resource and papers — [Methods](methods/index.md).
+---
 
 ## Quick start
 
+License, SIFs, and `dlsurfer doctor` are on [Installation](installation/index.md). Then the [Tutorial](getting_started/tutorial.md) (dry-run + EG evidence).
+
 ```bash
-git clone https://github.com/phindagijimana/dlsurfer.git
-cd dlsurfer
-pip install -e .
-source env/cluster_containers.sh   # Apptainer SIFs + license
-dlsurfer doctor                    # expect [READY]
+source env/cluster_containers.sh
+dlsurfer doctor
 dlsurfer run --profile core-lesion \
   --t1 T1.nii.gz --lesion-mask lesion.nii.gz \
   --sd ./subjects --sid sub-01 --fs-license $FS_LICENSE
+# add --execute when the plan looks right
 ```
 
-## Where to go next
+HPC examples: `hpc/sbatch_*.sh`. Flags: [Usage](usage/minimal.md) · full CLI: [Command-line reference](cli.md).
 
-| Topic | Page |
-|-------|------|
-| Containers & install | [Installation](installation/index.md) |
-| Inputs / lesion / SUBJECTS_DIR | [Preparing data](preparing/inputs.md) |
-| Minimal run & profiles | [Running](usage/minimal.md) |
-| CLI flags | [Command-line reference](cli.md) |
-| What is written | [Outputs](outputs/layout.md) |
-| Why wrap FS/FastSurfer | [Engine policy](workflows/engine_policy.md) |
+!!! warning "Short of a BIDS App"
+    Unlike [DKT Connectome](https://dkt-connectome.readthedocs.io/) (`./run bids out participant`), DLSurfer’s production API is still explicit paths. A stub exists — [BIDS App status](bids_app.md).
+
+---
+
+## Contact
+
+- GitHub: [phindagijimana/dlsurfer](https://github.com/phindagijimana/dlsurfer) · open an issue  
+- Related: [DKT Connectome docs](https://dkt-connectome.readthedocs.io/) · [repo](https://github.com/phindagijimana/dkt_connectome)  
+- [FAQ](troubleshooting/faq.md) · [Troubleshooting](troubleshooting/cluster.md) · [Citation](citation.md)

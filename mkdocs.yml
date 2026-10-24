@@ -4,6 +4,8 @@ site_url: https://phindagijimana.github.io/dlsurfer/
 repo_url: https://github.com/phindagijimana/dlsurfer
 repo_name: phindagijimana/dlsurfer
 edit_uri: edit/main/docs/
+# Docs IA inspired by DKT Connectome (https://dkt-connectome.readthedocs.io/)
+# and QSIPrep (install / prepare / usage / outputs).
 
 theme:
   name: material
@@ -49,47 +51,43 @@ markdown_extensions:
 
 nav:
   - Home: index.md
-  - Installation:
-      - Overview: installation/index.md
+  - Getting started:
+      - What DLSurfer does: getting_started/what.md
+      - Installation: installation/index.md
       - Apptainer containers: installation/apptainer.md
       - Python package: installation/python.md
       - Doctor check: installation/doctor.md
-  - Preparing data:
-      - Inputs: preparing/inputs.md
+      - Tutorial: getting_started/tutorial.md
+      - Sample results: getting_started/sample_results.md
+      - Outputs: outputs/layout.md
+      - Metrics and QC files: outputs/metrics.md
+      - Handoff: outputs/handoff.md
+      - And DKT Connectome: getting_started/and_dkt.md
+  - Using the pipeline:
+      - Usage: usage/minimal.md
+      - Profiles: usage/profiles.md
+      - Preparing your data: preparing/inputs.md
       - Lesion masks: preparing/lesions.md
       - SUBJECTS_DIR: preparing/subjects_dir.md
-  - Running DLSurfer:
-      - Minimal command: usage/minimal.md
-      - Profiles: usage/profiles.md
       - Devices and HPC: usage/hpc.md
       - Preview the plan: usage/preview.md
       - Gates: usage/gates.md
-  - Methods & citations:
-      - Overview: methods/index.md
+      - Quality control: usage/qc.md
+      - BIDS App status: bids_app.md
+  - Methods:
+      - Methods overview: methods/overview.md
       - Engines (resources + papers): methods/engines.md
-  - BIDS App status: bids_app.md
-  - Command-line reference: cli.md
-  - Outputs:
-      - Layout: outputs/layout.md
-      - Metrics and QC: outputs/metrics.md
-      - Handoff: outputs/handoff.md
-  - Pipeline details:
       - Engine policy: workflows/engine_policy.md
       - core / core-lesion: workflows/core.md
       - Atlases: workflows/atlases.md
       - Specialty modules: workflows/specialty.md
       - Surfaces (Phase 3): workflows/surfaces.md
-  - Troubleshooting:
-      - FAQ: troubleshooting/faq.md
-      - Cluster notes: troubleshooting/cluster.md
-  - Citation: citation.md
-  - Changelog: changelog.md
-  - Lab evidence:
-      - Live runs: lab/LIVE_RUNS.md
-      - EG smoke: lab/EG_SMOKE_EVIDENCE.md
-      - TBI ± LIT surfaces: lab/TBI_LIT_SURFACES_REPORT.md
-      - Publish notes: lab/PUBLISH.md
   - Reference:
+      - FAQ: troubleshooting/faq.md
+      - Troubleshooting: troubleshooting/cluster.md
+      - Command-line reference: cli.md
+      - Citation: citation.md
+      - Changelog: changelog.md
       - Claims: reference/CLAIMS.md
       - Isolation: reference/ISOLATION.md
       - Engine policy (full): reference/ENGINE_POLICY.md
@@ -100,6 +98,12 @@ nav:
       - Structure modules: reference/STRUCTURE_MODULES.md
       - Phases: reference/PHASES.md
       - DKT handoff: reference/DKT_HANDOFF.md
+  - Developer:
+      - Contributing: contributing.md
+      - Live runs: lab/LIVE_RUNS.md
+      - EG smoke: lab/EG_SMOKE_EVIDENCE.md
+      - TBI ± LIT surfaces: lab/TBI_LIT_SURFACES_REPORT.md
+      - Publish notes: lab/PUBLISH.md
 
 extra:
   social:

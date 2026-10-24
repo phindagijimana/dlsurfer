@@ -1,6 +1,7 @@
 site_name: DLSurfer
 site_description: Curated deep-learning morphometry orchestrator (FreeSurfer-shaped outputs)
-site_url: https://phindagijimana.github.io/dlsurfer/
+# Prefer Read the Docs when connected; GitHub Pages remains a mirror.
+site_url: https://dlsurfer.readthedocs.io/
 repo_url: https://github.com/phindagijimana/dlsurfer
 repo_name: phindagijimana/dlsurfer
 edit_uri: edit/main/docs/

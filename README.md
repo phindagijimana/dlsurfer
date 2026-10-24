@@ -9,7 +9,7 @@
 > Does **not** replace FreeSurfer / FastSurfer science.  
 > Orchestrates validated tools (FastSurfer VINN, neuroLIT, Synth*, TopoFit, …).
 
-**Documentation** ([DKT Connectome](https://dkt-connectome.readthedocs.io/)-style IA + QSIPrep depth): https://phindagijimana.github.io/dlsurfer/
+**Documentation** ([DKT Connectome](https://dkt-connectome.readthedocs.io/)-style IA + QSIPrep depth): https://dlsurfer.readthedocs.io/ (mirror: [GitHub Pages](https://phindagijimana.github.io/dlsurfer/))
 
 Local: `pip install -e ".[docs]" && mkdocs serve`
 

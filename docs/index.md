@@ -2,7 +2,7 @@
 
 DLSurfer turns a **T1w** (± lesion mask) into a **FreeSurfer-shaped `SUBJECTS_DIR`** using validated FastSurfer / FreeSurfer DL tools. With a lesion mask and profile `core-lesion`, the same plan can **inpaint T1w** (neuroLIT) then run ordinary FastSurfer so surfaces and labels are estimated on a filled anatomy. It is study-agnostic: lesion steps stay off unless you choose a lesion profile and pass a mask.
 
-Sibling connectomics pipeline: **[DKT Connectome](https://dkt-connectome.readthedocs.io/)** (BIDS DWI → DKT connectome). DLSurfer is **isolated** morphometry orchestration — it does not import or modify the DKT workflow; handoff is optional print-only notes.
+Docs host: [dlsurfer.readthedocs.io](https://dlsurfer.readthedocs.io/). Sibling connectomics pipeline: **[DKT Connectome](https://dkt-connectome.readthedocs.io/)** (BIDS DWI → DKT connectome). DLSurfer is **isolated** morphometry orchestration — it does not import or modify the DKT workflow; handoff is optional print-only notes.
 
 Linux + Apptainer (FreeSurfer license required). Release: **v0.1.0**.
 

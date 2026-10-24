@@ -20,7 +20,7 @@ docs = ["mkdocs>=1.5", "mkdocs-material>=9.0", "pymdown-extensions>=10.0"]
 
 [project.urls]
 Homepage = "https://github.com/phindagijimana/dlsurfer"
-Documentation = "https://phindagijimana.github.io/dlsurfer/"
+Documentation = "https://dlsurfer.readthedocs.io/"
 Repository = "https://github.com/phindagijimana/dlsurfer"
 
 [project.scripts]

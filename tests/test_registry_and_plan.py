@@ -225,8 +225,10 @@ def test_gates_block_experimental_execute():
     # TopoFit ±LIT machine gate passed → execute not blocked by gates
     assert gates_blocking_profile("surf-dl-topofit") == []
     assert gates_blocking_profile("surf-dl-topofit-only") == []
-    # V2C still open
+    # V2C still open (literature-best CSR gate)
     assert any(b["id"] == "tbi_lit_surfaces" for b in gates_blocking_profile("surf-dl-v2c"))
+    assert any(b["id"] == "tbi_lit_sphere_sugar" for b in gates_blocking_profile("sphere-sugar"))
+    assert any(b["id"] == "tbi_lit_thickness" for b in gates_blocking_profile("thickness-fast"))
     plan = build_plan(
         "surf-dl-v2c",
         t1=Path("/tmp/t1.nii.gz"),
@@ -261,15 +263,43 @@ def test_topofit_multi_hemi_plan():
     assert run[1].argv[4] == "rh"
 
 
-def test_gates_yaml_eg_passed_synthseg_skipped():
+def test_v2c_plan_uses_wrapper():
+    plan = build_plan(
+        "surf-dl-v2c",
+        t1=Path("/tmp/t1.nii.gz"),
+        sd=Path("/tmp/subjects"),
+        sid="sub-EG",
+        device="cuda",
+    )
+    run = runnable_steps(plan)
+    assert run and run[0].argv[0] == "dlsurfer-v2c"
+
+
+def test_schaefer_default_annots_resolve():
+    root = Path(__file__).resolve().parents[1]
+    lh = root / "resources/schaefer2018/fsaverage/label/lh.Schaefer2018_400Parcels_17Networks_order.annot"
+    if not lh.is_file():
+        return
+    plan = build_plan(
+        "atlas-schaefer",
+        t1=Path("/tmp/t1.nii.gz"),
+        sd=Path("/tmp/subjects"),
+        sid="sub-EG",
+        device="cpu",
+    )
+    run = runnable_steps(plan)
+    assert "Schaefer2018" in run[0].argv[run[0].argv.index("--sval-annot") + 1]
+
+
+def test_gates_yaml_eg_passed_synthseg_open():
     import yaml
 
     path = Path(__file__).resolve().parents[1] / "dlsurfer" / "gates.yaml"
     gates = yaml.safe_load(path.read_text())["gates"]
     assert gates["core_lesion_eg_smoke"]["status"] == "passed"
-    assert "SKIPPED" in gates["synthseg_pc_vs_jlf"]["note"]
+    assert "JLF" in gates["synthseg_pc_vs_jlf"]["note"]
     assert gates["tbi_lit_topofit"]["status"] == "passed"
     assert gates["tbi_lit_surfaces"]["status"] == "open"
-    assert "surf-dl-v2c" in gates["tbi_lit_surfaces"]["blocks_profiles"]
+    assert gates["tbi_lit_surfaces"]["blocks_profiles"] == ["surf-dl-v2c"]
     assert "TBI_LIT_SURFACES_REPORT" in gates["tbi_lit_surfaces"]["evidence"]
     assert "docs/lab/" in gates["tbi_lit_surfaces"]["evidence"]

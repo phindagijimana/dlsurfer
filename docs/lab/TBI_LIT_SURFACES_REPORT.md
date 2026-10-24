@@ -1,75 +1,40 @@
-# TBI ± LIT — surface DL gate report (`tbi_lit_surfaces` / `tbi_lit_topofit`)
+# TBI ± LIT — surface DL gate report
 
-**Date:** 2026-10-23  
-**TopoFit gate:** **passed** (`tbi_lit_topofit`, machine check)  
-**Remaining backends gate:** **open** (`tbi_lit_surfaces` — V2C / SUGAR / DL-CTE)  
-**Skip:** SynthSeg-PC vs JLF (per request)
+**Date:** 2026-10-23–24  
+**TopoFit gate:** **passed** (`tbi_lit_topofit`) — machine + Chamfer soft QC  
+**V2C gate:** **open** (`tbi_lit_surfaces` — literature-best Ready full CSR)  
+**SUGAR / DL-CTE:** separate open gates (sphere / thickness-only)  
+**Piriform:** production stays **JLF** until SynthSeg-PC eval (`synthseg_pc_vs_jlf`)
 
-## Question
+## Literature picks (one per stage)
 
-Before promoting `surf-dl-topofit`, `surf-dl-v2c`, `sphere-sugar`, or `thickness-fast` out of experimental: do DL surface / thickness backends remain safe on **lesioned T1** with and without **standalone LIT** vs default **recon-surf**?
+| Stage | Chosen | Why |
+|-------|--------|-----|
+| Full CSR (Phase 3) | **V2C-Flow** | Best Ready joint WM+pial + template IDs (Bongratz MedIA 2024); over CortexODE/PialNN |
+| sphere.reg alt | **SUGAR** | Multi-dataset / speed (Ren 2023) > S3Reg |
+| Thickness w/o mesh | **DL-CTE family** | Fast biomarker path; never for connectome |
+| Piriform production | **JLF** | Best deployed IDEAS method until PC clears Hammers bar |
 
-## Baseline already available (EG, recon-surf — classical surfaces)
+## TopoFit — machine + Chamfer QC
 
-Source: `…/gugger_eg_lit/experiment_abc/COMPARISON_EG.md` (2026-10-23).
+Score: `work/phase3_topofit/topofit_tbi_lit_score.json`  
+FreeView: `work/phase3_topofit/freeview_topofit_qc.sh`
 
-| Arm | Path | LIT wiring |
-|-----|------|------------|
-| **C standalone + LIT** | `standalone/fastsurfer_v2.6/subjects/sub-EG` | Fill outside → ordinary FastSurfer → posthoc LIT (**DLSurfer `core-lesion`**) |
-| **A native LIT** | `native_lesion_mask/fastsurfer_v2.6/subjects/sub-EG` | `--lesion_mask` in-recon (`core-lesion-native`) |
-| **B standalone 2.4.2** | `standalone/fastsurfer_v2.4.2/…` | Same fill, older FS |
+| Metric | with-LIT lh/rh | no-LIT |
+|--------|----------------|--------|
+| `*.white.topofit` | yes / yes | yes / yes |
+| mean Chamfer vs recon-surf white | ~2.2–2.7 mm | similar |
+| hausdorff_95 | ~10–14 mm | elevated (unequal topology) |
 
-### Key scalars (aseg / method)
+`machine_ok=true`, `chamfer_soft_ok=true` (≤4 mm). Visual QC: run FreeView script (red=TopoFit+LIT, yellow=noLIT, green=recon-surf).
 
-| Contrast | Isolates | aseg Dice | Note |
-|----------|----------|-----------|------|
-| A_native vs C | method @ FS 2.6 | **~0.981** | Close, not bit-identical |
-| B vs C | FS 2.4.2 vs 2.6 | **~0.994** | Version effect small on EG |
+## V2C-Flow — install path
 
-Surfaces: `lh/rh.white`, `lh/rh.pial`, `recon-surf.done` present on A/B/C.  
-Do **not** Jaccard `lh/rh.lesion.label` across arms (non-homologous meshes).
+- Clone: `Documents/others/Vox2Cortex` (pretrained `V2C-Flow-S-ADNI`)  
+- Wrapper: `env/bin/dlsurfer-v2c`  
+- Job: `sbatch hpc/sbatch_phase3_v2c_tbi_lit.sh` after `conda env create -f requirements.yml` (+ pytorch3d) or their Docker wheel under `Vox2Cortex/docker/`  
+- Gate stays **open** until ±LIT inference succeeds and meshes are scored
 
-**Baseline conclusion:** For **recon-surf** (default DLSurfer surfaces), standalone LIT (`core-lesion`) is validated on EG against native LIT and is the preferred HPC-split path.
+## Baseline recon-surf (EG)
 
-## Phase-3 TopoFit — **machine_ok**
-
-| Profile | Backend | ±LIT protocol | Status |
-|---------|---------|---------------|--------|
-| `surf-dl-topofit-only` | TopoFit WM | EG with-LIT tree + no-LIT seg→TopoFit | **passed** (`machine_ok=true`) |
-| `surf-dl-topofit` | VINN + TopoFit | Full profile | Unblocked with TopoFit gate |
-| `surf-dl-v2c` | V2C-Flow WM+pial | Needs V2C install/weights | **Not available** — still blocked |
-| `sphere-sugar` | SUGAR | After surfaces exist ±LIT | **Not run** — still blocked |
-| `thickness-fast` | DL-CTE | Biomarker only | **Not run** — still blocked |
-
-### Score (`work/phase3_topofit/topofit_tbi_lit_score.json`)
-
-| Arm | `lh/rh.white.topofit` | verts/hemi | Notes |
-|-----|----------------------|------------|-------|
-| with-LIT | yes / yes | 163842 | On EG standalone FS2.6+LIT tree |
-| no-LIT | yes / yes | 163842 | FastSurfer `--seg_only --tal_reg` then TopoFit |
-| ref recon-surf white | present | ~110k | Different mesh density — no vertex Jaccard |
-
-`machine_ok=true`. FreeView / Hausdorff vs recon-surf C still **manual**.
-
-### Ops notes (TopoFit on this cluster)
-
-- FastSurfer CLI: `--batch` (not `--batch_size`); use 24G GPU + `--batch 1 --viewagg-device cpu`.
-- FS SIF wrapper needs `--nv` for GPU tools; TopoFit **CPU** — torch 2.0+cu117 in `freesurfer_7.4.1.sif` fails `conv3d` on L40S.
-- TopoFit needs a **real** `mri/norm.mgz` (surfa rejects symlinks) and `mri/transforms/talairach.lta` → use `--seg_only --tal_reg` + hardlink `orig_nu→norm`.
-- Scripts: `hpc/sbatch_phase3_topofit_tbi_lit.sh`, `hpc/sbatch_phase3_topofit_nolit_finish.sh`.
-
-```bash
-source env/cluster_containers.sh
-sbatch hpc/sbatch_phase3_topofit_tbi_lit.sh
-# Score: work/phase3_topofit/topofit_tbi_lit_score.json
-```
-
-## Decision
-
-| Item | Decision |
-|------|----------|
-| Default surfaces | Stay **recon-surf** |
-| `core-lesion` standalone LIT | **Production** for lesion morphometry (EG evidence) |
-| `surf-dl-topofit*` | Gate **passed** (machine); FreeView QC recommended before production science use |
-| `surf-dl-v2c` / SUGAR / DL-CTE | Remain **experimental** / blocked |
-| SynthSeg-PC vs JLF | **Skipped** (this round) |
+Standalone LIT (`core-lesion`) validated on EG vs native LIT — see prior COMPARISON_EG.md. GPU confirmatory job **191960 COMPLETED** (`work/eg_gpu_core_lesion`, `recon-surf.done`).

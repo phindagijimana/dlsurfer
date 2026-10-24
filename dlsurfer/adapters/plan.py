@@ -260,7 +260,7 @@ def build_plan(
         else:
             use_t1 = working_t1
         # Engines that emit multiple runnable argv sequences
-        if eid in {"freesurfer_long", "atlas_schaefer", "topofit"}:
+        if eid in {"freesurfer_long", "atlas_schaefer", "topofit", "sugar"}:
             multi = _multi_argv(
                 eid,
                 t1=use_t1,
@@ -511,6 +511,8 @@ def _single_argv(
     atlas: str = "dkt",
     threads: int = 4,
 ) -> tuple[list[str], list[str], bool]:
+    import os
+
     if eid == "synthsr":
         out = sd / sid / "mri" / "T1.synthsr.nii.gz"
         return (
@@ -730,31 +732,64 @@ def _single_argv(
             False,
         )
     if eid == "v2c_flow":
+        # Literature-best Ready full CSR (Bongratz MedIA 2024). Wrapper + V2C_ROOT.
         return (
             [
-                "python",
-                "main.py",
-                "--test",
-                "-n",
-                "V2C-Flow-S-ADNI",
-                f"# t1={t1}",
-                f"# out={sd / sid}",
-                "# see https://github.com/ai-med/Vox2Cortex",
+                "dlsurfer-v2c",
+                "--t1",
+                str(t1),
+                "--out-dir",
+                str(sd),
+                "--sid",
+                sid,
+                "--device",
+                "cuda" if str(device).startswith("cuda") else "cpu",
             ],
-            ["EXPERIMENTAL Ready CSR; cite Bongratz CVPR 2022 + V2C-Flow 2024."],
+            [
+                "EXPERIMENTAL Ready CSR (chosen over CortexODE/PialNN).",
+                "Requires V2C_ROOT + vox2organ env (see hpc/sbatch_phase3_v2c_tbi_lit.sh).",
+                "Cite Bongratz CVPR 2022 + V2C-Flow MedIA 2024.",
+            ],
             False,
         )
     if eid == "sugar":
+        # Literature-best Ready spherical reg (Ren SUGAR 2023 > S3Reg for multi-dataset).
+        sugar = os.environ.get("SUGAR_ROOT", "${SUGAR_ROOT}")
         return (
-            [f"# SUGAR sphere.reg alternative — subjects_dir={sd} sid={sid}"],
-            ["EXPERIMENTAL; cite Ren SUGAR 2023. https://github.com/pBFSLab/SUGAR"],
-            True,
+            [
+                "python",
+                f"{sugar}/infer.py",
+                "--subjects_dir",
+                str(sd),
+                "--sid",
+                sid,
+                "--hemi",
+                "lh",
+            ],
+            [
+                "EXPERIMENTAL sphere.reg alt; set SUGAR_ROOT (pBFSLab/SUGAR).",
+                "Cite Ren SUGAR 2023. Separate gate from V2C CSR.",
+            ],
+            False,
         )
     if eid == "dl_cte":
+        # Literature-best Ready thickness-without-mesh (DL-CTE / CortexMorph family).
+        cte = os.environ.get("DL_CTE_ROOT", "${DL_CTE_ROOT}")
         return (
-            [f"# DL-CTE thickness — t1={t1} — NOT for connectome handoff"],
-            ["Cite Rebsamen DL+DiReCT; CortexMorph; Wu DL-CTE."],
-            True,
+            [
+                "python",
+                f"{cte}/predict.py",
+                "--t1",
+                str(t1),
+                "--out",
+                str(sd / sid / "mri" / "thickness_dl_cte.nii.gz"),
+            ],
+            [
+                "EXPERIMENTAL thickness map only — NOT for connectome/aparc.",
+                "Set DL_CTE_ROOT (wujiong-hub/DL-CTE or CortexMorph).",
+                "Cite Rebsamen DL+DiReCT; CortexMorph; Wu DL-CTE 2025.",
+            ],
+            False,
         )
     return [f"# unset builder for {eid}"], [], True
 
@@ -820,9 +855,29 @@ def _multi_argv(
             ),
         ]
     if eid == "atlas_schaefer":
-        lh = str(schaefer_lh) if schaefer_lh else os.environ.get("SCHAEFER_ANNOT_LH", "${SCHAEFER_ANNOT_LH}")
-        rh = str(schaefer_rh) if schaefer_rh else os.environ.get("SCHAEFER_ANNOT_RH", "${SCHAEFER_ANNOT_RH}")
-        notes = ["Best Ready alt for Schaefer; same pattern for HCP-MMP."]
+        pkg_ann = _PKG.parent / "resources" / "schaefer2018" / "fsaverage" / "label"
+        def_lh = pkg_ann / "lh.Schaefer2018_400Parcels_17Networks_order.annot"
+        def_rh = pkg_ann / "rh.Schaefer2018_400Parcels_17Networks_order.annot"
+        lh = (
+            str(schaefer_lh)
+            if schaefer_lh
+            else os.environ.get(
+                "SCHAEFER_ANNOT_LH",
+                str(def_lh) if def_lh.is_file() else "${SCHAEFER_ANNOT_LH}",
+            )
+        )
+        rh = (
+            str(schaefer_rh)
+            if schaefer_rh
+            else os.environ.get(
+                "SCHAEFER_ANNOT_RH",
+                str(def_rh) if def_rh.is_file() else "${SCHAEFER_ANNOT_RH}",
+            )
+        )
+        notes = [
+            "Best Ready alt for Schaefer; same pattern for HCP-MMP.",
+            "Default annots: resources/schaefer2018/fsaverage/label (Yeo/CBIG 400/17).",
+        ]
         return [
             (
                 [
@@ -858,6 +913,29 @@ def _multi_argv(
                 notes,
                 False,
             ),
+        ]
+    if eid == "sugar":
+        sugar = os.environ.get("SUGAR_ROOT", "${SUGAR_ROOT}")
+        notes = [
+            "Literature-best Ready sphere.reg (Ren SUGAR 2023).",
+            "Set SUGAR_ROOT; blocked by gate tbi_lit_sphere_sugar until ±LIT evidence.",
+        ]
+        return [
+            (
+                [
+                    "python",
+                    f"{sugar}/infer.py",
+                    "--subjects_dir",
+                    str(sd),
+                    "--sid",
+                    sid,
+                    "--hemi",
+                    hemi,
+                ],
+                notes,
+                False,
+            )
+            for hemi in ("lh", "rh")
         ]
     return [([f"# unset multi builder for {eid}"], [], True)]
 

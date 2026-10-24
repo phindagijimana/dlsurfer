@@ -103,6 +103,7 @@ nav:
       - Live runs: lab/LIVE_RUNS.md
       - EG smoke: lab/EG_SMOKE_EVIDENCE.md
       - TBI ± LIT surfaces: lab/TBI_LIT_SURFACES_REPORT.md
+      - SynthSeg-PC vs JLF: lab/SYNTHSEG_PC_EVAL.md
       - Publish notes: lab/PUBLISH.md
 
 extra:

@@ -1,80 +1,62 @@
-# Live runs — remaining ops checklist
+# Live runs — ops checklist
 
-Scaffolding is done. This page is what still needs a **human/cluster** pass.
-
-## 1. Bind tools (once per cluster)
-
-**Preferred on this lab cluster** — Apptainer wrappers (no host module):
+## 1. Bind tools
 
 ```bash
 cd …/preprocessing/DL/dlsurfer
 source env/cluster_containers.sh
-PYTHONPATH=. python -m dlsurfer doctor
-# expect [READY] core live-run deps present
+PYTHONPATH=. python -m dlsurfer doctor   # [READY]
 ```
 
-Uses SIFs under `Documents/others/containers/` (`fastsurfer_cu126_v2.6.0`, `lit_0.6.0`, `freesurfer_7.4.1`) + `~/.freesurfer/license.txt`.
+Exports SIFs, `SCHAEFER_ANNOT_{LH,RH}`, `V2C_ROOT`, `SYNTHSEG_PC_*`.  
+Optional meta-image: `containers/dlsurfer.def` + `entrypoint_bids.sh`.
 
-Policy: wrap FastSurfer/FS for SUBJECTS_DIR; see [`ENGINE_POLICY.md`](../reference/ENGINE_POLICY.md).  
-Optional meta-image scaffold: `containers/dlsurfer.def`.
+## 2. EG smoke — **passed** (incl. GPU confirmatory)
 
-## 2. EG smoke — **passed**
-
-Evidence: [`EG_SMOKE_EVIDENCE.md`](EG_SMOKE_EVIDENCE.md) · gate `core_lesion_eg_smoke: passed`.
-
-```bash
-source env/cluster_containers.sh
-bash scripts/eg_core_lesion_smoke.sh                 # dry-run
-EXECUTE=1 DEVICE=cuda bash scripts/eg_core_lesion_smoke.sh   # full re-run when GPU available
-```
-
-Login-node CPU LIT is impractical (~days); EG standalone FS2.6+LIT already completed on-cluster.
-
-GPU re-run:
-
-```bash
-sbatch hpc/sbatch_eg_gpu_core_lesion.sh       # inpainted T1 → core + lit-post (job 191960)
-sbatch hpc/sbatch_phase3_topofit_tbi_lit.sh   # TopoFit ±LIT + score JSON — done
-```
-
-TopoFit score: `work/phase3_topofit/topofit_tbi_lit_score.json` (`machine_ok=true`).
+| Arm | Status |
+|-----|--------|
+| Standalone FS2.6+LIT science | Done (prior) |
+| GPU job **191960** | **COMPLETED** — `work/eg_gpu_core_lesion/sub-EG/scripts/recon-surf.done` |
+| Metrics vs sacct | `work/eg_gpu_core_lesion/metrics_vs_slurm.json` (~6991s compute / 01:56:33 wall) |
 
 ## 3. Gates
 
-```bash
-python -m dlsurfer gates
-```
-
-| Gate | Unblocks | Action |
-|------|----------|--------|
-| `tbi_lit_topofit` | `surf-dl-topofit*` | **passed** (machine) — [`TBI_LIT_SURFACES_REPORT.md`](TBI_LIT_SURFACES_REPORT.md) |
-| `tbi_lit_surfaces` | V2C / SUGAR / DL-CTE | **open** until those ±LIT runs |
-| `synthseg_pc_vs_jlf` | `structure-piriform-synthseg` | **Skipped** this round |
-| `core_lesion_eg_smoke` | (ops marker) | **passed** — [`EG_SMOKE_EVIDENCE.md`](EG_SMOKE_EVIDENCE.md) |
-
-Override only for lab debugging: `--allow-experimental`.
-
-## 4. Schaefer execute
+| Gate | Choice (literature) | Status |
+|------|---------------------|--------|
+| `tbi_lit_topofit` | TopoFit (FS-shipped WM) | **passed** + Chamfer QC / FreeView script |
+| `tbi_lit_surfaces` | **V2C-Flow** (best Ready full CSR) | **open** — clone + `dlsurfer-v2c`; need `vox2organ` env |
+| `tbi_lit_sphere_sugar` | SUGAR | open — set `SUGAR_ROOT` |
+| `tbi_lit_thickness` | DL-CTE family | open — set `DL_CTE_ROOT` |
+| `synthseg_pc_vs_jlf` | **JLF production** until PC ≥ JLF | open — env wired; Hammers val dirs |
+| `core_lesion_eg_smoke` | — | **passed** |
 
 ```bash
-export SCHAEFER_ANNOT_LH=/path/fsaverage/label/lh.Schaefer2018_*.annot
-export SCHAEFER_ANNOT_RH=/path/fsaverage/label/rh.Schaefer2018_*.annot
-# or:
-python -m dlsurfer run --profile atlas-schaefer \
-  --schaefer-annot-lh … --schaefer-annot-rh … \
-  --t1 T1.nii.gz --sd SD --sid S --execute
+sbatch hpc/sbatch_phase3_v2c_tbi_lit.sh   # after conda env vox2organ
+bash scripts/eval_synthseg_pc_vs_jlf.sh     # when SSP_GT_DIR / SSP_IMG_DIR set
 ```
 
-## 5. Metrics vs legacy multi-job
+## 4. Schaefer — **executed**
 
-After `--execute`, compare:
+Annots bundled under `resources/schaefer2018/…`. FS wrapper propagates `SUBJECTS_DIR`.
 
-- `dlsurfer_metrics.tsv` compute seconds (by device)
-- SLURM queue time from `.out` / `sacct`
-- Failure modes (PATH, OOM, LIT)
+Wrote `lh/rh.schaefer.annot` on:
 
-See [`PUBLISH.md`](PUBLISH.md).
+- standalone FS2.6 EG subjects  
+- `work/eg_gpu_core_lesion/sub-EG`
 
-## Intentionally not remaining as “todo”
+```bash
+export SUBJECTS_DIR=…/subjects   # must contain fsaverage + sid
+python -m dlsurfer run --profile atlas-schaefer --t1 /dev/null --sd "$SUBJECTS_DIR" --sid sub-EG --execute
+```
 
-`dlsurfer gaps-remaining` — meta-SIF (ops optional), FreeView/manual edits, TRACULA/PET/fMRI, bit-identity, Infant FS, native-LIT+split.
+## 5. BIDS App
+
+Derivatives + Boutiques + CI fixture — see [bids_app.md](../bids_app.md).
+
+## 6. Metrics vs legacy SLURM
+
+```bash
+python scripts/compare_metrics_slurm.py \
+  --metrics work/eg_gpu_core_lesion/sub-EG/scripts/dlsurfer_metrics.tsv \
+  --jobid 191960 --out work/eg_gpu_core_lesion/metrics_vs_slurm.json
+```

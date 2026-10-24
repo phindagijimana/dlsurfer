@@ -25,13 +25,22 @@ Reference tree (read-only symlink):
 - CPU LIT fill estimated **~50 h** (aborted).  
 - Full FastSurfer+LIT for EG **already completed** on this cluster (jobs 191907 / 191927 / posthoc) — identical standalone path that `core-lesion` orchestrates.
 
-GPU re-run under DLSurfer (inpainted T1 → FastSurfer core):
+GPU confirmatory re-run under DLSurfer (inpainted T1 → FastSurfer core):
+
+| Item | Result |
+|------|--------|
+| Job | **191960 COMPLETED** (01:56:33 wall) |
+| Tree | `work/eg_gpu_core_lesion/sub-EG` |
+| Markers | `recon-surf.done`, `dlsurfer_eg_gpu_core_lesion.done`, contract OK |
+| Compute | ~829 s CUDA seg + ~6162 s CPU surf (`dlsurfer_metrics.tsv`) |
+| lit-post | WARN missing `inpainting/inpainting_mask.nii.gz` (non-fatal; fill reused) |
 
 ```bash
 source env/cluster_containers.sh
-sbatch hpc/sbatch_eg_gpu_core_lesion.sh
-# job 191960 — VINN/CC/Cereb/Hyp done; recon-surf in progress (2026-10-23)
-# or: EXECUTE=1 DEVICE=cuda bash scripts/eg_core_lesion_smoke.sh
+sbatch hpc/sbatch_eg_gpu_core_lesion.sh   # already done: 191960
+python scripts/compare_metrics_slurm.py \
+  --metrics work/eg_gpu_core_lesion/sub-EG/scripts/dlsurfer_metrics.tsv \
+  --jobid 191960
 ```
 
 ## Policy note

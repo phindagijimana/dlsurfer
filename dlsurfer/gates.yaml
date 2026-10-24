@@ -11,30 +11,52 @@ gates:
     evidence: docs/lab/TBI_LIT_SURFACES_REPORT.md
     note: >
       machine_ok=true — both hemis lh/rh.white.topofit on with-LIT and no-LIT
-      (work/phase3_topofit/topofit_tbi_lit_score.json). FreeView/Hausdorff QC still
-      recommended. FS 7.4.1 SIF TopoFit runs on CPU (cu117 conv3d fails on L40S).
+      (work/phase3_topofit/topofit_tbi_lit_score.json). Hausdorff + FreeView QC
+      via scripts/score_topofit_tbi_lit.py (qc_ok soft bar). FS 7.4.1 SIF TopoFit
+      runs on CPU (cu117 conv3d fails on L40S).
 
   tbi_lit_surfaces:
-    title: TBI ± LIT remaining surface DL backends
+    title: TBI ± LIT V2C-Flow (literature-best Ready full CSR)
     blocks_profiles:
       - surf-dl-v2c
+    status: open
+    evidence: docs/lab/TBI_LIT_SURFACES_REPORT.md
+    note: >
+      Chosen surface-DL backend for full WM+pial is V2C-Flow (Bongratz MedIA 2024;
+      better Ready metrics/speed than CortexODE/PialNN). Vox2Cortex cloned under
+      Documents/others/Vox2Cortex; use dlsurfer-v2c + hpc/sbatch_phase3_v2c_tbi_lit.sh.
+      SUGAR / DL-CTE are separate stage gates (sphere / thickness-only).
+
+  tbi_lit_sphere_sugar:
+    title: TBI ± LIT SUGAR spherical registration
+    blocks_profiles:
       - sphere-sugar
+    status: open
+    evidence: docs/lab/TBI_LIT_SURFACES_REPORT.md
+    note: >
+      Literature-best Ready sphere.reg alt (Ren SUGAR 2023 > S3Reg). Set SUGAR_ROOT
+      when installed; not required for SUBJECTS_DIR morphometry default (recon-surf).
+
+  tbi_lit_thickness:
+    title: TBI ± LIT DL-CTE thickness (no mesh)
+    blocks_profiles:
       - thickness-fast
     status: open
     evidence: docs/lab/TBI_LIT_SURFACES_REPORT.md
     note: >
-      TopoFit ±LIT machine gate passed (see tbi_lit_topofit). V2C-Flow not installed;
-      SUGAR / DL-CTE not run. Keep these experimental until ±LIT evidence exists.
+      Literature-best Ready thickness-without-surfaces (DL-CTE / CortexMorph family).
+      Biomarker only — never for connectome/aparc. Set DL_CTE_ROOT when installed.
 
   synthseg_pc_vs_jlf:
     title: SynthSeg-PC vs JLF/MAPER (Hammers + IDEAS)
     blocks_profiles:
       - structure-piriform-synthseg
     status: open
-    evidence: ""
+    evidence: docs/lab/SYNTHSEG_PC_EVAL.md
     note: >
-      SKIPPED this round (lab request). Hammers Dice/Jaccard vs JLF/MAPER still required
-      before IDEAS PC production. Set SYNTHSEG_PC_* when resumed.
+      Production PC remains JLF (Wang) until Hammers Dice/Jaccard clears the bar —
+      literature-best *deployed* method today. SYNTHSEG_PC_* wired via
+      env/cluster_containers.sh; run scripts/eval_synthseg_pc_vs_jlf.sh.
 
   core_lesion_eg_smoke:
     title: EG smoke core-lesion --execute
@@ -43,5 +65,5 @@ gates:
     evidence: docs/lab/EG_SMOKE_EVIDENCE.md
     note: >
       doctor READY via Apptainer wrappers; core-lesion dry-run OK; EG standalone FS2.6+LIT
-      science path already completed on-cluster (see evidence). GPU re-execute optional
-      (sbatch hpc/sbatch_eg_gpu_core_lesion.sh — job 191960 in flight).
+      science path already completed on-cluster (see evidence). GPU confirmatory job
+      191960 COMPLETED (recon-surf.done under work/eg_gpu_core_lesion).

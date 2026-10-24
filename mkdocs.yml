@@ -1,0 +1,103 @@
+site_name: DLSurfer
+site_description: Curated deep-learning morphometry orchestrator (FreeSurfer-shaped outputs)
+site_url: https://phindagijimana.github.io/dlsurfer/
+repo_url: https://github.com/phindagijimana/dlsurfer
+repo_name: phindagijimana/dlsurfer
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - toc.follow
+
+plugins:
+  - search
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - tables
+  - toc:
+      permalink: true
+  - attr_list
+  - md_in_html
+
+nav:
+  - Home: index.md
+  - Installation:
+      - Overview: installation/index.md
+      - Apptainer containers: installation/apptainer.md
+      - Python package: installation/python.md
+      - Doctor check: installation/doctor.md
+  - Preparing data:
+      - Inputs: preparing/inputs.md
+      - Lesion masks: preparing/lesions.md
+      - SUBJECTS_DIR: preparing/subjects_dir.md
+  - Running DLSurfer:
+      - Minimal command: usage/minimal.md
+      - Profiles: usage/profiles.md
+      - Devices and HPC: usage/hpc.md
+      - Preview the plan: usage/preview.md
+      - Gates: usage/gates.md
+  - Command-line reference: cli.md
+  - Outputs:
+      - Layout: outputs/layout.md
+      - Metrics and QC: outputs/metrics.md
+      - Handoff: outputs/handoff.md
+  - Pipeline details:
+      - Engine policy: workflows/engine_policy.md
+      - core / core-lesion: workflows/core.md
+      - Atlases: workflows/atlases.md
+      - Specialty modules: workflows/specialty.md
+      - Surfaces (Phase 3): workflows/surfaces.md
+  - Troubleshooting:
+      - FAQ: troubleshooting/faq.md
+      - Cluster notes: troubleshooting/cluster.md
+  - Citation: citation.md
+  - Changelog: changelog.md
+  - Lab evidence:
+      - Live runs: lab/LIVE_RUNS.md
+      - EG smoke: lab/EG_SMOKE_EVIDENCE.md
+      - TBI ± LIT surfaces: lab/TBI_LIT_SURFACES_REPORT.md
+      - Publish notes: lab/PUBLISH.md
+  - Reference:
+      - Claims: reference/CLAIMS.md
+      - Isolation: reference/ISOLATION.md
+      - Engine policy (full): reference/ENGINE_POLICY.md
+      - Atlases (full): reference/ATLASES.md
+      - Alternatives: reference/ALTERNATIVES.md
+      - Compare FS/FastSurfer: reference/COMPARE_FS_FASTSURFER.md
+      - Gaps without alts: reference/GAPS_WITHOUT_ALTERNATIVES.md
+      - Structure modules: reference/STRUCTURE_MODULES.md
+      - Phases: reference/PHASES.md
+      - DKT handoff: reference/DKT_HANDOFF.md
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/phindagijimana/dlsurfer

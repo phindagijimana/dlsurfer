@@ -1,0 +1,24 @@
+Bootstrap: docker
+From: deepmi/fastsurfer:cu132-v2.6.0
+
+# Optional meta-image scaffold — not a science alternative.
+# Build:  apptainer build dlsurfer.sif dlsurfer.def
+# Run:    apptainer run --nv -B $FS_LICENSE:/fs_license:ro dlsurfer.sif …
+# Bind FREESURFER_HOME / license / data as needed. Prefer upstream FastSurfer
+# image + host FS until a lab-maintained SIF is required.
+
+%post
+    apt-get update || true
+    # Host FreeSurfer + neuroLIT are typically bind-mounted, not baked in
+    # (license + size). Document binds in docs/LIVE_RUNS.md.
+    echo "DLSurfer orchestrator expects PYTHONPATH host mount or pip install."
+
+%runscript
+    echo "DLSurfer meta-image scaffold based on FastSurfer cu132-v2.6.0"
+    echo "Mount host dlsurfer package and run: python -m dlsurfer doctor"
+    exec "$@"
+
+%labels
+    Author TrackTBI-Sub lab
+    Version 0.1-scaffold
+    BasedOn deepmi/fastsurfer:cu132-v2.6.0

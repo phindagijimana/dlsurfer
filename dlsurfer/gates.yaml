@@ -1,0 +1,47 @@
+# Production gates — experimental profiles stay blocked until status: passed
+# Update status after lab validation; do not promote without evidence path.
+
+gates:
+  tbi_lit_topofit:
+    title: TBI ± LIT TopoFit (WM) machine validation
+    blocks_profiles:
+      - surf-dl-topofit
+      - surf-dl-topofit-only
+    status: passed
+    evidence: docs/lab/TBI_LIT_SURFACES_REPORT.md
+    note: >
+      machine_ok=true — both hemis lh/rh.white.topofit on with-LIT and no-LIT
+      (work/phase3_topofit/topofit_tbi_lit_score.json). FreeView/Hausdorff QC still
+      recommended. FS 7.4.1 SIF TopoFit runs on CPU (cu117 conv3d fails on L40S).
+
+  tbi_lit_surfaces:
+    title: TBI ± LIT remaining surface DL backends
+    blocks_profiles:
+      - surf-dl-v2c
+      - sphere-sugar
+      - thickness-fast
+    status: open
+    evidence: docs/lab/TBI_LIT_SURFACES_REPORT.md
+    note: >
+      TopoFit ±LIT machine gate passed (see tbi_lit_topofit). V2C-Flow not installed;
+      SUGAR / DL-CTE not run. Keep these experimental until ±LIT evidence exists.
+
+  synthseg_pc_vs_jlf:
+    title: SynthSeg-PC vs JLF/MAPER (Hammers + IDEAS)
+    blocks_profiles:
+      - structure-piriform-synthseg
+    status: open
+    evidence: ""
+    note: >
+      SKIPPED this round (lab request). Hammers Dice/Jaccard vs JLF/MAPER still required
+      before IDEAS PC production. Set SYNTHSEG_PC_* when resumed.
+
+  core_lesion_eg_smoke:
+    title: EG smoke core-lesion --execute
+    blocks_profiles: []
+    status: passed
+    evidence: docs/lab/EG_SMOKE_EVIDENCE.md
+    note: >
+      doctor READY via Apptainer wrappers; core-lesion dry-run OK; EG standalone FS2.6+LIT
+      science path already completed on-cluster (see evidence). GPU re-execute optional
+      (sbatch hpc/sbatch_eg_gpu_core_lesion.sh — job 191960 in flight).

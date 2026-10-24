@@ -1,0 +1,338 @@
+# DLSurfer run profiles — each step references engines.yaml ids
+
+profiles:
+
+  core:
+    phase: 1
+    description: >
+      Default morphometry: FastSurferVINN + CC + CerebNet + HypVINN + recon-surf.
+      FreeSurfer-shaped SUBJECTS_DIR (DKT labels by default; atlas-flexible — not
+      the DKT connectome pipeline).
+    requires_lesion_mask: false
+    engine: fastsurfer
+    steps:
+      - {engine: fastsurfer_vinn, stage: seg, device: gpu}
+      - {engine: fastsurfer_cc, stage: seg, device: gpu}
+      - {engine: cerebnet, stage: seg, device: gpu}
+      - {engine: hypvinn, stage: seg, device: gpu}
+      - {engine: recon_surf, stage: surf, device: cpu}
+    citations_note: "Cite Henschel 2020/2022; Faber 2022; Estrada 2023; Pollak CC 2026."
+
+  core-lesion:
+    phase: 1
+    description: >
+      BEST default lesion path: standalone neuroLIT fill → ordinary FastSurfer core
+      → optional lit-postprocessing. Preserves GPU seg / CPU surf HPC split
+      (native --lesion_mask cannot).
+    requires_lesion_mask: true
+    engine: fastsurfer
+    steps:
+      - {engine: neurolit, stage: fill, device: gpu, mode: standalone_inpaint}
+      - {engine: fastsurfer_vinn, stage: seg, device: gpu, t1: inpainted}
+      - {engine: fastsurfer_cc, stage: seg, device: gpu}
+      - {engine: cerebnet, stage: seg, device: gpu}
+      - {engine: hypvinn, stage: seg, device: gpu}
+      - {engine: recon_surf, stage: surf, device: cpu}
+      - {engine: neurolit, stage: post, device: cpu, mode: lit_post, optional_flag: post_lit}
+    citations_note: "Cite Pollak LIT 2025 + FastSurfer core citations."
+
+  core-lesion-native:
+    phase: 1
+    description: >
+      Opt-in native FastSurfer --lesion_mask (LIT inside recon). WARN: incompatible
+      with --seg_only/--surf_only HPC split. Prefer core-lesion for clusters.
+    requires_lesion_mask: true
+    engine: fastsurfer
+    warn: "Native LIT blocks FastSurfer seg/surf partition split."
+    steps:
+      - {engine: neurolit, stage: native, device: gpu, mode: lesion_mask_flag}
+      - {engine: fastsurfer_vinn, stage: all, device: gpu}
+      - {engine: recon_surf, stage: all, device: mixed}
+    citations_note: "Cite Pollak LIT 2025; FastSurfer LIT module docs."
+
+  seg-quick:
+    phase: 1
+    description: Volume segmentation only (FastSurferVINN) — no surfaces.
+    requires_lesion_mask: false
+    engine: fastsurfer
+    steps:
+      - {engine: fastsurfer_vinn, stage: seg_only, device: gpu}
+    citations_note: "Cite Henschel FastSurferVINN 2022."
+
+  seg-quick-synthseg:
+    phase: 1
+    description: SynthSeg volume seg (± parc) for odd contrast/resolution.
+    requires_lesion_mask: false
+    engine: freesurfer
+    steps:
+      - {engine: synthseg, stage: seg, device: auto}
+    citations_note: "Cite Billot SynthSeg."
+
+  strip:
+    phase: 1
+    description: SynthStrip skull-strip / brain mask utility.
+    requires_lesion_mask: false
+    engine: freesurfer
+    steps:
+      - {engine: synthstrip, stage: strip, device: cpu}
+    citations_note: "Cite Hoopes SynthStrip 2022."
+
+  fs8:
+    phase: 2
+    description: >
+      FreeSurfer 8 recon-all (embeds SynthSeg/Strip/Morph). XOR with FastSurfer
+      core — do not mix mid-subject.
+    requires_lesion_mask: false
+    engine: freesurfer8
+    steps:
+      - {engine: freesurfer8, stage: recon-all, device: cpu}
+    citations_note: "Cite FreeSurfer 8 release notes + Fischl 2012."
+
+  fs8-lesion:
+    phase: 2
+    description: neuroLIT fill then FreeSurfer 8 recon-all on inpainted T1 (+ optional lit.post).
+    requires_lesion_mask: true
+    engine: freesurfer8
+    steps:
+      - {engine: neurolit, stage: fill, device: gpu, mode: standalone_inpaint}
+      - {engine: freesurfer8, stage: recon-all, device: cpu, t1: inpainted}
+      - {engine: neurolit, stage: post, device: cpu, mode: lit_post, optional_flag: post_lit}
+    citations_note: "Cite Pollak LIT 2025 + FreeSurfer 8."
+
+  register-easyreg:
+    phase: 2
+    description: Utility — EasyReg symmetric multimodal registration.
+    requires_lesion_mask: false
+    engine: utility
+    steps:
+      - {engine: easyreg, stage: register, device: cpu}
+    citations_note: "Cite Iglesias EasyReg 2023."
+
+  register-synthmorph:
+    phase: 2
+    description: Utility — SynthMorph acquisition-agnostic registration.
+    requires_lesion_mask: false
+    engine: utility
+    steps:
+      - {engine: synthmorph, stage: register, device: auto}
+    citations_note: "Cite Hoffmann SynthMorph."
+
+  bias-deepn4:
+    phase: 2
+    description: Optional DeepN4 T1 bias-field correction utility.
+    requires_lesion_mask: false
+    engine: utility
+    steps:
+      - {engine: deepn4, stage: bias, device: auto}
+    citations_note: "Cite Kanakaraj DeepN4 2024."
+
+  surf-dl-topofit:
+    phase: 3
+    description: >
+      Experimental: after FastSurfer seg (or FS), replace classical white placement
+      with TopoFit. Requires TBI±LIT validation before production use.
+    experimental: true
+    requires_lesion_mask: false
+    engine: hybrid
+    steps:
+      - {engine: fastsurfer_vinn, stage: seg_only, device: gpu}
+      - {engine: topofit, stage: white, device: auto}
+    citations_note: "Cite Hoopes TopoFit 2022 + Henschel VINN."
+    gate: "Validate on lesioned T1 with and without LIT before enabling in production."
+
+  surf-dl-topofit-only:
+    phase: 3
+    description: >
+      Experimental TopoFit only on an existing SUBJECTS_DIR (skip VINN). Use for
+      TBI±LIT gate on EG trees that already have aseg/orig.
+    experimental: true
+    requires_lesion_mask: false
+    requires_existing_subject: true
+    engine: hybrid
+    steps:
+      - {engine: topofit, stage: white, device: auto}
+    citations_note: "Cite Hoopes TopoFit 2022."
+    gate: "Validate on lesioned T1 with and without LIT before enabling in production."
+
+  surf-dl-v2c:
+    phase: 3
+    description: >
+      Experimental: V2C-Flow WM+pial (+ template correspondence). Best Ready full
+      CSR candidate to eventually replace recon-surf.
+    experimental: true
+    requires_lesion_mask: false
+    engine: hybrid
+    steps:
+      - {engine: v2c_flow, stage: csr, device: gpu}
+    citations_note: "Cite Bongratz Vox2Cortex 2022 + V2C-Flow 2024."
+    gate: "TBI±LIT gate; map scanner-RAS meshes into analysis contract."
+
+  sphere-sugar:
+    phase: 3
+    description: Experimental spherical registration via SUGAR (needs existing surfaces).
+    experimental: true
+    requires_lesion_mask: false
+    engine: utility
+    steps:
+      - {engine: sugar, stage: sphere_reg, device: auto}
+    citations_note: "Cite Ren SUGAR 2023."
+
+  thickness-fast:
+    phase: 3
+    description: >
+      Fast volumetric thickness (DL-CTE family). NOT for connectome/aparc handoff.
+    experimental: true
+    requires_lesion_mask: false
+    engine: utility
+    steps:
+      - {engine: dl_cte, stage: thickness, device: auto}
+    citations_note: "Cite Rebsamen DL+DiReCT; CortexMorph; DL-CTE."
+
+  # --- Gap-fill profiles (best alternatives from COMPARE_FS_FASTSURFER) ---
+
+  core-dk:
+    phase: 1
+    description: >
+      FastSurfer core with Desikan–Killiany via --fsaparc (best alt for DK gap).
+      Equivalent to: dlsurfer run --profile core --atlas dk
+    requires_lesion_mask: false
+    engine: fastsurfer
+    atlas: dk
+    steps:
+      - {engine: fastsurfer_vinn, stage: seg, device: gpu}
+      - {engine: fastsurfer_cc, stage: seg, device: gpu}
+      - {engine: cerebnet, stage: seg, device: gpu}
+      - {engine: hypvinn, stage: seg, device: gpu}
+      - {engine: recon_surf, stage: surf, device: cpu}
+    citations_note: "Cite FastSurfer + FreeSurfer aparc (DK)."
+
+  atlas-destrieux:
+    phase: 2
+    description: >
+      Best alt for Destrieux gap: FreeSurfer -a2009s on an existing subject tree
+      (needs white/pial + sphere.reg from core/fs8 first).
+    requires_lesion_mask: false
+    requires_existing_subject: true
+    engine: freesurfer
+    atlas: destrieux
+    steps:
+      - {engine: atlas_destrieux, stage: parc, device: cpu}
+    citations_note: "Cite Destrieux 2010."
+
+  atlas-schaefer:
+    phase: 2
+    description: >
+      Best alt for Schaefer gap: project fsaverage Schaefer annot → subject after
+      sphere.reg. Set SCHAEFER_ANNOT_{LH,RH} or pass paths in plan notes.
+    requires_lesion_mask: false
+    requires_existing_subject: true
+    engine: freesurfer
+    atlas: schaefer
+    steps:
+      - {engine: atlas_schaefer, stage: project, device: cpu}
+    citations_note: "Cite Schaefer 2018."
+
+  fs-long:
+    phase: 2
+    description: >
+      Best alt for longitudinal gap: FreeSurfer -base then -long (placeholders for
+      timepoints). Not a DL replacement.
+    requires_lesion_mask: false
+    engine: freesurfer
+    steps:
+      - {engine: freesurfer_long, stage: longitudinal, device: cpu}
+    citations_note: "Cite Reuter 2012 longitudinal FS."
+
+  subfields-ha:
+    phase: 2
+    description: Best alt for HA gap — FreeSurfer segmentHA_T1 on existing SUBJECTS_DIR.
+    requires_lesion_mask: false
+    requires_existing_subject: true
+    engine: freesurfer
+    steps:
+      - {engine: segment_ha, stage: ha, device: cpu}
+    citations_note: "Cite Iglesias HA / Saygin amygdala."
+
+  nuclei-bs-thal:
+    phase: 2
+    description: Best alt for brainstem + thalamic nuclei gaps (segmentBS + ThalamicNuclei).
+    requires_lesion_mask: false
+    requires_existing_subject: true
+    engine: freesurfer
+    steps:
+      - {engine: segment_bs, stage: brainstem, device: cpu}
+      - {engine: segment_thalamic, stage: thalamic, device: cpu}
+    citations_note: "Cite Iglesias brainstem 2015 + thalamic 2018."
+
+  fs-clinical:
+    phase: 2
+    description: >
+      Best alt for infant/clinical gap: recon-all-clinical (odd contrast / clinical
+      resolution). For true neonates prefer Infant FreeSurfer outside this profile.
+    requires_lesion_mask: false
+    engine: freesurfer
+    steps:
+      - {engine: recon_all_clinical, stage: clinical, device: auto}
+    citations_note: "Cite SynthSeg / recon-all-clinical docs."
+
+  # --- Specialty structure + Synth* (clau_seg / piriform lab tools) ---
+
+  preprocess-synthsr:
+    phase: 2
+    description: >
+      Optional T1 preprocess only (mri_synthsr). Writes synthsr T1 under SUBJECTS_DIR;
+      does not segment PC or claustrum. Chain into core / structure-* afterward.
+    requires_lesion_mask: false
+    engine: freesurfer
+    steps:
+      - {engine: synthsr, stage: preprocess, device: auto}
+    citations_note: "Cite Billot SynthSR; FreeSurfer mri_synthsr."
+
+  structure-claustrum:
+    phase: 2
+    description: >
+      Mauri 2025 claustrum (mri_claustrum_seg). Raw T1 → out under SUBJECTS_DIR/mri/claustrum.
+      Lab: Documents/clau_seg. Not a piriform model.
+    requires_lesion_mask: false
+    engine: freesurfer
+    steps:
+      - {engine: mauri_claustrum, stage: claustrum, device: cpu}
+    citations_note: "Cite Mauri Hum Brain Mapp 2025;46:e70303."
+
+  structure-piriform-synthseg:
+    phase: 3
+    description: >
+      Experimental SynthSeg-PC (Billot GMM U-Net) for Steinbart 125/126. Requires
+      SYNTHSEG_PC_MODEL / SYNTHSEG_PC_ROOT / label npy. IDEAS production PC stays JLF
+      until eval gate. Not mri_synthseg; not Mauri claustrum weights.
+    experimental: true
+    requires_lesion_mask: false
+    engine: hybrid
+    steps:
+      - {engine: synthseg_pc, stage: piriform, device: auto}
+    citations_note: "Cite Billot SynthSeg 2023; Steinbart 2023; Hammers 2003."
+    gate: "Hammers Dice/Jaccard vs JLF/MAPER; do not deploy as IDEAS production before gate."
+
+  structure-hippunfold:
+    phase: 2
+    description: >
+      Ready DL HA alternative (HippUnfold). Default HA remains profile subfields-ha
+      (segmentHA_T1); use this for unfold-based morphometry.
+    requires_lesion_mask: false
+    engine: hybrid
+    steps:
+      - {engine: hippunfold, stage: hippo, device: auto}
+    citations_note: "Cite DeKraker eLife 2022."
+
+  # Optional chain: clinical T1 → SynthSR → claustrum (dry-run composition)
+  clinical-claustrum:
+    phase: 2
+    description: >
+      SynthSR preprocess then Mauri claustrum. For poor clinical T1s needing both
+      salvage and claustrum labels.
+    requires_lesion_mask: false
+    engine: hybrid
+    steps:
+      - {engine: synthsr, stage: preprocess, device: auto}
+      - {engine: mauri_claustrum, stage: claustrum, device: cpu, t1: synthsr}
+    citations_note: "Cite Billot SynthSR + Mauri 2025."
